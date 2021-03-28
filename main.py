@@ -1,4 +1,3 @@
-
 # This is a sample Python script.
 
 # Press Shift+F10 to execute it or replace it with your code.
@@ -7,6 +6,14 @@ import requests as req
 from bs4 import BeautifulSoup as bs
 import re
 import lxml
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+
+options = Options()
+options.headless = True
+
+browser = webdriver.Firefox(options=options)
+
 # URL = 'https://catalog.onliner.by/videocard?desktop_gpu%5B0%5D=rtx3060ti&desktop_gpu%5B1%5D=rtx3070&desktop_gpu%5Boperation%5D=union'
 URL = 'https://catalog.onliner.by/videocard/gigabyte/gvn306tgamingocp'
 URL_M = 'https://catalog.onliner.by/videocard?desktop_gpu[0]=rtx3060ti&desktop_gpu[1]=rtx3070&desktop_gpu[operation]=union'
@@ -16,8 +23,12 @@ def print_hi(name):
     print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
 
 def get_html(url,params = None):
-    res = req.get(url,headers=HEADERS,params=params)
-    return res
+#     res = req.get(url,headers=HEADERS, timeout=(10, 10))
+
+    browser.get(url)
+    browser.implicitly_wait(10)
+    html = browser.page_source
+    return html
 
 def get_content(html):
     soup = bs(html,'html.parser')
@@ -43,13 +54,18 @@ def get_content(html):
 
 def get_hrefs(url):
     res = get_html(url)
-    soup = bs(res.text, 'html.parser')
+    soup = bs(res, 'html.parser')
 
     refs = soup.find_all('div', class_='schema-product__title')
     # refs = soup.find('a', href='True')
     # refs = soup.findAll('a')
-    print(refs)
+    links_with_text = []
+    for item in refs:
+        for a in item.find_all('a', href=True):
+            if a.text:
+                links_with_text.append(a['href'])
     # refs =soup('a')
+    print(links_with_text)
     # links = [link['href'] for link in soup('a') if 'href' in link.attrs]
     # print(links)
     # link = refs[0].find('a')
